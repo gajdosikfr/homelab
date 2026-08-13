@@ -1,0 +1,17 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    user: 1000:1000
+    group_add:
+      - "991"
+    network_mode: 'host'
+    volumes:
+      - /home/gg/jellyfin/config:/config
+      - /home/gg/jellyfin/cache:/cache
+      - /mnt/data:/media
+    devices:
+      - /dev/dri:/dev/dri
+    restart: 'unless-stopped'
+    environment:
+      - JELLYFIN_PublishedServerUrl=http://192.168.0.63

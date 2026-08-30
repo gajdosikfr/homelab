@@ -4,7 +4,7 @@
 
 I wanted a simple home media server. I first tried a basic Samba setup with VLC and Windows sharing to my Android TV, but it was a total pain. Then I found Jellyfin. It's open-source, looks great, and just works.
 
-The setup is managed with Docker Compose. I mounted the media and config folders from the host, so I don't lose any data when updating or deleting the container. I also passed through my Intel iGPU to handle hardware transcoding easily.
+The setup is managed with Docker Compose. I mounted the media and config folders from the host, so I don't lose any data when updating or deleting the container. I also passed through my Intel GPU to handle hardware transcoding easily.
 
 A must-have feature for me is the 5.1 to stereo audio downmixing. It finally fixes that annoying issue where sound effects blow your ears out but you can't hear the voices.
 
@@ -24,7 +24,7 @@ Jellyfin runs as a Docker container on my Ubuntu Server. The deployment is manag
 
 ## Hardware Transcoding
 
-The server has an Intel HD Graphics 630 iGPU. The `/dev/dri` device is passed through to the Jellyfin container and Intel Quick Sync (QSV) is enabled in Jellyfin.
+The server has an Intel HD Graphics 630 GPU. The `/dev/dri` device is passed through to the Jellyfin container and Intel Quick Sync (QSV) is enabled in Jellyfin.
 
 I normally use Direct Play to keep the original video quality, but hardware transcoding is available when a client requires a different codec, resolution or bitrate.
 

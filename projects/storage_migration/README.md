@@ -6,14 +6,14 @@ The original 2 TB NTFS media disk was almost full, so I replaced it with an 8 TB
 
 My HP ProDesk has two SATA ports but only one SATA power connector. I could have bought a SATA power splitter, but the original wires are quite thin and I could not find their current rating. Both 3.5-inch drives would be under continuous load for several hours during the transfer, with an additional short current spike when they spin up. It would probably work without any problem, but I was not comfortable risking the cable or the motherboard connector just to save some transfer time. On this model, power for the SATA drives comes from the motherboard rather than directly from the power supply, so transferring the data over the network seemed like the safer option.
 
-The old disk using NTFS was actually helpful in this case because I could connect it directly to my Windows desktop and share it over the network. Another option was an old SATA-to-USB adapter from AliExpress, but it only supports USB 2.0 and transferring almost 2 TB through it would take a very long time. I also did not really trust the cheap adapter with such a long transfer, and I had lost the 12 V power supply required for a 3.5-inch drive anyway.
+The old disk using NTFS was actually helpful in this case because I could connect it directly to my Windows desktop and share it over the network. Another option was an old SATA-to-USB adapter from AliExpress, but it only supports USB 2.0, and transferring almost 2 TB through it would take a very long time. I also did not really trust the cheap adapter with such a long transfer, and I had lost the 12 V power supply required for a 3.5-inch drive anyway.
 
 The goal was to keep the existing `/mnt/data` mountpoint. Jellyfin mounts this directory as `/media`, so keeping the same host path meant that no changes to the Jellyfin libraries or Docker Compose configuration were required.
 
 ## Migration plan
 
 1. Stop Jellyfin and disable its automatic restart.
-2. Disable the old disk entry in `/etc/fstab`. - 
+2. Disable the old disk entry in `/etc/fstab`.
 3. Replace the physical disk.
 4. Create a GPT partition table and an ext4 filesystem.
 5. Mount the new disk again at `/mnt/data`.
@@ -37,10 +37,9 @@ The old disk used a device-based entry in `/etc/fstab`:
 /dev/sda1 /mnt/data ntfs defaults 0 0
 ```
 
-This entry was temporarily commented out before shutting down and replacing the disk.If you don´t do this you can cause system won´t boot, trust me I have experinced this one and take me some time to recover system. I was trying to set automount with this ntfs disk on RHEL and there were no NTFS drivers. After reboot the system won´t boot.
+This entry was temporarily commented out before shutting down and replacing the disk. Skipping this step can leave the system unable to boot. I've run into this myself: I was trying to set up automount for an NTFS disk on RHEL, which has no built-in NTFS driver support, and the system failed to boot after reboot. It took a while to recover from.
 
-
-This time i find out you can verify fstab and also try to mount.
+This time, I made sure to verify the fstab entry and test the mount before rebooting.
 
 ## Preparing the new disk
 
@@ -89,11 +88,11 @@ sudo mount -a
 sudo chown gg:gg /mnt/data
 ```
 
-Using a UUID makes the mount independent of whether the kernel assigns the disk a different device name in the future. This happend to me in VirtualBox while making course so UUID is better choice. 
+Using a UUID makes the mount independent of whether the kernel assigns the disk a different device name in the future. This happened to me in VirtualBox during a course, which is why using a UUID is the safer choice.
 
 ## Data transfer
 
-The old NTFS disk was connected to a Windows PC and shared over SMB with read-only access. A temporary Windows account was used because anonymous SMB access was rejected, even if password protected sharing was turned off. This happends in Windows all the time.
+The old NTFS disk was connected to a Windows PC and shared over SMB with read-only access. A temporary Windows account was used because anonymous SMB access was rejected, even with password-protected sharing turned off. This seems to be common behavior with Windows SMB shares.
 
 The Windows share was mounted read-only using SMB 3.0. The uid and gid options ensured that the mounted files were accessible to the gg user:
 
@@ -141,12 +140,11 @@ sudo docker start jellyfin
 
 Because the new disk uses the same `/mnt/data` mountpoint, Jellyfin continued using the existing library paths without any Compose changes.
 
-
 ## Troubleshooting
 
 During the migration, an earlier rsync configuration preserved permissions from the CIFS/SMB source. Some directories therefore ended up without write permission for the owner, even though gg remained the owner.
 
-The affected permissions were corrected after the transfer. 
+The affected permissions were corrected after the transfer:
 
 ```bash
 sudo chmod -R u+rwX "/mnt/data/Film" "/mnt/data/Seriály"
